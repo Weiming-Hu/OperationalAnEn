@@ -1,11 +1,14 @@
-# for (library in c('shiny', 'leaflet', 'maps','raster','stringr','rgdal')) {
-# 	if (requireNamespace(package = library)) {
-# 		library(library)
-# 	} else {
-# 		msg <- paste("Package not found", library)
-# 		stop(msg)
-# 	}	
-# }
+for (library in c('shiny', 'leaflet', 'maps','raster','stringr','rgdal')) {
+	if (requireNamespace(package = library)) {
+		
+		cat('Loading library', library, '\n')
+		library(library, character.only = T)
+		
+	} else {
+		msg <- paste("Package not found", library)
+		stop(msg)
+	}
+}
 
 #Hardcoded the date here so it works. Can be changed by removing line 12 and changing 'date2' to 'Date'.
 date1 <- Sys.Date()
