@@ -1,14 +1,9 @@
-for (library in c('shiny', 'leaflet', 'maps','raster','stringr','rgdal')) {
-	if (requireNamespace(package = library)) {
-		
-		cat('Loading library', library, '\n')
-		library(library, character.only = T)
-		
-	} else {
-		msg <- paste("Package not found", library)
-		stop(msg)
-	}
-}
+library(shiny)
+library(leaflet)
+library(maps)
+library(raster)
+library(stringr)
+library(rgdal)
 
 #Hardcoded the date here so it works. Can be changed by removing line 12 and changing 'date2' to 'Date'.
 date1 <- Sys.Date()
@@ -30,7 +25,7 @@ ret <- download.file(url, destfile, method = "auto", quiet = FALSE)
 
 # Check whether the download succeeded
 if (ret != 0) {
-  stop('Download failed!')
+  stop('Download failed! Make sure the URL is accessible and the destination file path is valid.')
 }
 
 #This is downloading the wrong file and I am not sure why? The file size is significantly smaller than what is described.
