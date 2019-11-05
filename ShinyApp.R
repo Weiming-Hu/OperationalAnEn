@@ -29,10 +29,10 @@ if (any(unlist(ret) != 0)) {
 }
 
 # Flat GRIB messages
-for (file in list.files('output', full.names = T)) {
+for (file in destfiles) {
 	
-	cat('Processing', command, '\n')
 	command <- paste('/usr/bin/grib_copy', file, gsub('\\.grb2$', '_flat.grb2', file))
+	cat('Processing', command, '\n')
 	
 	ret <- system(command)
 	
