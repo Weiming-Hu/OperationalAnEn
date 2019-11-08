@@ -1,3 +1,5 @@
+#!/usr/bin/Rscript
+
 # This script deploys the Shinyapp for current date
 
 # Define the project root folder
@@ -33,3 +35,5 @@ files <- list.files(
 files.copy <- c(files, file.app)
 ret <- file.copy(from = files.copy, to = folder.server, overwrite = T)
 stopifnot(ret)
+
+cat('ShinyApp has been deployed to', folder.server, '!\n')
