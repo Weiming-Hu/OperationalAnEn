@@ -1,60 +1,93 @@
 library(RColorBrewer)
 library(leaflet)
 library(raster)
-library(RAnEn)
 library(shiny)
 library(sp)
 
-i.par <- 3
-i.flt <- 1
+# Define basic visualization parameters
 zoom <- 5
-rast.alpha <- 0.5
+rast.alpha <- 0.7
 
 # Get current date
 current.date <- Sys.Date()
 current.date.str <- format(current.date, format = '%Y%m%d')
 
-# Read data
-forecasts <- readForecasts(paste0(current.date.str ,'.nc'))
+# This regex will be used to match different components in a file name
+regex <- '^(\\d+)-(.*?)-(\\d+)\\.tif$'
 
-# Shift X coordinates
-forecasts$Xs <- forecasts$Xs - 360
+# Get all available tiff files in the current folder
+all.files <- list.files(path = '.', pattern = 'tif')
 
-# This is the layer to plot
-values <- forecasts$Data[i.par, , 1, i.flt]
+# Extract the available variables for select boxes
+select.dates <- unique(gsub(regex, '\\1', all.files))
+select.variables <- unique(gsub(regex, '\\2', all.files))
+select.flts <- sort(as.numeric(unique(gsub(
+	regex, '\\3', all.files))) / 3600)
 
-# Create a raster layer
-crs <- crs('+proj=longlat +datum=WGS84')
-sppts <- SpatialPoints(
-	cbind(forecasts$Xs, forecasts$Ys),
-	proj4string = crs)
-ext <- extent(sppts)
-rast <- raster(ext, res = 0.25, crs = crs)
-rast <- rasterize(x = sppts, y = rast, field = values)
-
-pal <- colorNumeric(
-	palette = 'Spectral',
-	domain = values(rast),
-	na.color = NA)
-
-ui <- fillPage(
-	titlePanel("State College, PA"),
-	leafletOutput("mymap", height = 800)
+ui <- fixedPage(
+	titlePanel("Operational Analog Ensemble"),
+	
+	sidebarLayout(
+		sidebarPanel(
+			selectInput(
+				"date", label = h3("Date"), 
+				choices = select.dates, selected = 1),
+			selectInput(
+				"variable", label = h3("Weather variable"), 
+				choices = select.variables, selected = 1),
+			sliderInput("flt", label = h3("Horizon (h)"),
+									min = min(select.flts), 
+									max = max(select.flts),
+									value = min(select.flts)),
+			width = 3
+		),
+		mainPanel(
+			leafletOutput("weatherMap", height = 600))
+	)
 )
 
 shinyserver <- function(input, output) {
-	output$mymap <- renderLeaflet({
+	
+	# Define the image file path to read
+	file.tif <- reactive({
+		paste0(paste(
+			input$date, input$variable,
+			as.numeric(input$flt) * 3600,
+			sep = '-'), '.tif')
+	})
+	
+	output$weatherMap <- renderLeaflet({
+		
+		# Convert reactiveExpr to the actual object
+		file.tif <- file.tif()
+		
+		# Read the file as a raster
+		rast <- raster(file.tif)
+		
+		# This is the color function
+		pal <- colorNumeric(
+			palette = 'Spectral',
+			domain = values(rast),
+			na.color = NA)
+		
 		m <- leaflet() %>%
-			setView(lng = mean(forecasts$Xs),
-							lat = mean(mean(forecasts$Ys)),
-							zoom = zoom) %>%
+			setView(
+				lng = xFromCol(rast, ncol(rast) / 2),
+				lat = yFromRow(rast, nrow(rast) / 2),
+				zoom = zoom) %>%
 			addTiles() %>%
-			addRasterImage(rast, colors = pal,
-										 opacity = rast.alpha,
-										 project = F) %>%
-			addLegend(pal = pal, values = values(rast),
-								title = forecasts$ParameterNames[i.par])
+			addRasterImage(
+				rast, colors = pal,
+				opacity = rast.alpha,
+				project = F) %>%
+			addLegend(
+				pal = pal, values = values(rast),
+				title = gsub(regex, '\\2', file.tif))
 	})
 }
 
 shinyApp(ui, shinyserver)
+
+
+
+

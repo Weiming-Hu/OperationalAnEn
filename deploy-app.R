@@ -1,28 +1,35 @@
 # This script deploys the Shinyapp for current date
 
-current.date <- Sys.Date()
+# Define the project root folder
 project.root <- '~/github/OperationalAnEn'
 
+# Get current date
+current.date <- Sys.Date()
+current.date.str <- format(current.date, format = '%Y%m%d')
+
 # Define some folders
-project.process <- paste0(project.root, '/data-process')
-file.app <- paste0(project.process, '/app-data/app.R')
 folder.server <- '/home/graduate/wuh20/ShinyApps/operationalanen'
+folder.app <- paste0(project.root, '/data-process/app-data')
+file.app <- paste0(folder.app, '/app.R')
 
 # Sanity checks
-stopifnot(dir.exists(c(project.process, folder.server)))
+stopifnot(dir.exists(c(folder.app, folder.server)))
 stopifnot(file.exists(file.app))
 
-# Check whether the data has been preprocessed
-file.data <- paste0(project.process, '/app-data/', format(
-	current.date, format = '%Y%m%d'), '.nc')
+# Check whether files have been already generated for today
+files <- list.files(
+	folder.app, paste0('^', current.date.str, '.*\\.tif'),
+	full.names = T)
 
-if (file.exists(file.data)) {
-	cat('The data file has been found. Deploy the app ...\n')
-} else {
-	cat('The data file has not been found. Preprocess data ...\n')
-	source(paste0(project.process, '/data-process.R'))
+if (length(files) == 0) {
+	source(paste0(project.root, '/data-process/data-process.R'))
 }
 
-files.copy <- c(file.data, file.app)
+# Match files for all days
+files <- list.files(
+	folder.app, paste0('.tif'),
+	full.names = T)
+
+files.copy <- c(files, file.app)
 ret <- file.copy(from = files.copy, to = folder.server, overwrite = T)
 stopifnot(ret)

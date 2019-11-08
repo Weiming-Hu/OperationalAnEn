@@ -39,3 +39,4 @@ rsconnect/
 # User editted
 *.grb2
 *.nc
+*.tif
