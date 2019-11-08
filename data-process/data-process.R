@@ -17,7 +17,7 @@ flts <- c(str_pad(0:36, width = 2, pad = 0),
 flts <- flts[1:10]
 
 # Define the parameters to generate raster layers
-variable.names <- c('2MetreTemperature')
+variable.names <- c('2MetreTemperature', 'TotalPrecipitation')
 
 # Define the project root folder
 project.root <- '~/github/OperationalAnEn'
@@ -113,7 +113,7 @@ for (i.flt in 1:length(forecasts$FLTs)) {
 				folder.output, '/', current.date.str, '-',
 				forecasts$ParameterNames[i.par], '-',
 				forecasts$FLTs[i.flt], '.tif'),
-				format = 'GTiff')
+				format = 'GTiff', overwrite = T)
 		}
 	}
 }

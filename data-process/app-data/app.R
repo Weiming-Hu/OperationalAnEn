@@ -56,38 +56,46 @@ shinyserver <- function(input, output) {
 			sep = '-'), '.tif')
 	})
 	
+	observe({
+		if (!file.exists(file.tif())) {
+			showNotification('This combination is not available!')
+		}
+	})
+	
 	output$weatherMap <- renderLeaflet({
 		
 		# Convert reactiveExpr to the actual object
 		file.tif <- file.tif()
 		
-		# Read the file as a raster
-		rast <- raster(file.tif)
-		
-		# This is the color function
-		pal <- colorNumeric(
-			palette = 'Spectral',
-			domain = values(rast),
-			na.color = NA)
-		
-		m <- leaflet() %>%
-			setView(
-				lng = xFromCol(rast, ncol(rast) / 2),
-				lat = yFromRow(rast, nrow(rast) / 2),
-				zoom = zoom) %>%
-			addTiles() %>%
-			addRasterImage(
-				rast, colors = pal,
-				opacity = rast.alpha,
-				project = F) %>%
-			addLegend(
-				pal = pal, values = values(rast),
-				title = gsub(regex, '\\2', file.tif))
+		if (file.exists(file.tif)) {
+			# Read the file as a raster
+			rast <- raster(file.tif)
+			
+			# This is the color function
+			pal <- colorNumeric(
+				palette = 'Spectral',
+				domain = values(rast),
+				na.color = NA)
+			
+			if (input$variable == 'TotalPrecipitation') {
+				values(rast)[which(values(rast) == 0)] <- NA
+			}
+			
+			m <- leaflet() %>%
+				setView(
+					lng = xFromCol(rast, ncol(rast) / 2),
+					lat = yFromRow(rast, nrow(rast) / 2),
+					zoom = zoom) %>%
+				addTiles() %>%
+				addRasterImage(
+					rast, colors = pal,
+					opacity = rast.alpha,
+					project = F) %>%
+				addLegend(
+					pal = pal, values = values(rast),
+					title = gsub(regex, '\\2', file.tif))
+		}
 	})
 }
 
 shinyApp(ui, shinyserver)
-
-
-
-
