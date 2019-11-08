@@ -38,4 +38,4 @@ rsconnect/
 
 # User editted
 *.grb2
-output/
+*.nc
