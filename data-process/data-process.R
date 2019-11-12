@@ -1,3 +1,17 @@
+# "`-''-/").___..--''"`-._
+#  (`6_ 6  )   `-.  (     ).`-.__.`)   WE ARE ...
+#  (_Y_.)'  ._   )  `._ `. ``-..-'    PENN STATE!
+#    _ ..`--'_..-_/  /--'_.' ,'
+#  (il),-''  (li),'  ((!.-'
+# 
+# Author: Benjamin Tate <bgt5073@psu.edu>
+#         Weiming Hu <weiming@psu.edu>
+#         
+#         Geoinformatics and Earth Observation Laboratory (http://geolab.psu.edu)
+#         Department of Geography and Institute for CyberScience
+#         The Pennsylvania State University
+#
+
 # This script downloads and processes data
 
 library(pbmcapply)
@@ -11,7 +25,7 @@ library(shiny)
 library(maps)
 
 # Define the FLTs to download and process
-flts <- c(str_pad(0:36, width = 2, pad = 0),
+flts <- c(str_pad(1:36, width = 2, pad = 0),
 					seq(39, 84, by = 3))
 
 flts <- flts[1:10]
