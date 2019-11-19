@@ -30,8 +30,11 @@ flts <- c(str_pad(1:36, width = 2, pad = 0),
 
 flts <- flts[1:10]
 
+# How many days do you keep
+num.available.days <- 5
+
 # Define the parameters to generate raster layers
-variable.names <- c('2MetreTemperature', 'TotalPrecipitation')
+variable.names <- c('2MetreTemperature', 'TotalPrecipitation', 'WindDirection', 'WindSpeed')
 
 # Define the project root folder
 project.root <- '~/github/OperationalAnEn'
@@ -53,7 +56,9 @@ folder.output <- paste0(project.root, '/data-process/app-data')
 stopifnot(dir.exists(folder.output))
 
 # Define the output NetCDF file
+file.nc.tmp <- paste0(folder.output, '/', current.date.str, '-without-wind.nc')
 file.nc <- paste0(folder.output, '/', current.date.str, '.nc')
+unlink(file.nc.tmp)
 unlink(file.nc)
 
 # Define the urls to download
@@ -98,7 +103,17 @@ if (any(unlist(ret) != 0)) {
 # File conversion from grb2 to NetCDF
 command <- paste(
 	'/home/graduate/wuh20/github/AnalogsEnsemble/output/bin/gribConverter -c',
-	file.cfg, file.cfg.subset, '--folder', folder.output, '--output', file.nc)
+	file.cfg, file.cfg.subset, '--folder', folder.output, '--output', file.nc.tmp)
+
+ret <- system(command)
+
+# Calculate wind speed and wind direction fields
+command <- paste(
+	'/home/graduate/wuh20/github/AnalogsEnsemble/output/bin/windFieldCalculator',
+	'--file-in', file.nc.tmp, '--file-out', file.nc,
+	'--file-type Forecasts',
+	'-U 1000IsobaricInhPaU', '-V 1000IsobaricInhPaV',
+	'--dir-name WindDirection', '--speed-name WindSpeed')
 
 ret <- system(command)
 
@@ -123,6 +138,11 @@ for (i.flt in 1:length(forecasts$FLTs)) {
 			rast <- rasterize(
 				x = sppts, y = rast,
 				field = forecasts$Data[i.par, , 1, i.flt])
+			
+			if (grepl('Temperature', forecasts$ParameterNames[i.par])) {
+				rast <- rast - 273.15
+			}
+			
 			writeRaster(rast, filename = paste0(
 				folder.output, '/', current.date.str, '-',
 				forecasts$ParameterNames[i.par], '-',
@@ -135,5 +155,17 @@ for (i.flt in 1:length(forecasts$FLTs)) {
 if (ret == 0) {
 	files.to.remove <- list.files(
 		path = folder.output, pattern = "grb2", full.names = T)
-	file.remove(files.to.remove, file.nc)
+	file.remove(files.to.remove, file.nc, file.nc.tmp)
+	
+	# Extract all TIFF files
+	all.tif <- list.files(
+		path = folder.output, pattern = '.tif', full.names = T)
+	
+	# Extract files that are older than several days
+	pattern <- seq(from = current.date, by = -1, length.out = num.available.days)
+	pattern <- format(pattern, format = '%Y%m%d')
+	pattern <- paste(pattern, collapse = '|', sep = '')
+	
+	# Remove older files
+	file.remove(all.tif[!grepl(pattern = pattern, x = all.tif)])
 }

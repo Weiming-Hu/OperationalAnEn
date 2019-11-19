@@ -46,6 +46,10 @@ files <- list.files(
 	folder.app, paste0('.tif'),
 	full.names = T)
 
+# Remove files in the server folder
+file.remove(list.files(path = folder.server, full.names = T))
+
+# Copy files to server folder
 files.copy <- c(files, file.app)
 ret <- file.copy(from = files.copy, to = folder.server, overwrite = T)
 stopifnot(ret)

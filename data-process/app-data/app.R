@@ -103,9 +103,10 @@ shinyserver <- function(input, output) {
 
 			# This is the color function
 			pal <- colorNumeric(
-				palette = 'Spectral',
+				palette = 'RdYlBu',
 				domain = values(rast),
-				na.color = NA)
+				na.color = NA, 
+				reverse = T)
 
 			leafletProxy('weatherMap') %>%
 				removeImage(layerId = 'raster') %>%
@@ -127,7 +128,11 @@ shinyApp(ui, shinyserver)
 # Display a fixed legend.
 # Wind
 # 
-# 
+
+
 # 
 # Speed up the display.
 # Smooth transition.
+# 
+
+
